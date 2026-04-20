@@ -20,13 +20,13 @@ function Safe-Remove {
 # === 1. LIMPEZAS E CACHE ===
 Write-Host "`n=== 1. Limpeza de Arquivos Temporários ===" -ForegroundColor Magenta
 Safe-Remove "$env:TEMP\*"
-Safe-Remove "C:\Windows\Temp\*"
-Safe-Remove "C:\Windows\Prefetch\*"
-Safe-Remove "C:\Users\$env:USERNAME\AppData\Local\Microsoft\Windows\Explorer\thumbcache_*.db"
+Safe-Remove "$env:windir\Temp\*"
+Safe-Remove "$env:windir\Prefetch\*"
+Safe-Remove "$env:LOCALAPPDATA\Microsoft\Windows\Explorer\thumbcache_*.db"
 
 Write-Host "Limpando cache do Windows Update..." -ForegroundColor Cyan
 Stop-Service -Name wuauserv -Force
-Safe-Remove "C:\Windows\SoftwareDistribution\Download\*"
+Safe-Remove "$env:windir\SoftwareDistribution\Download\*"
 Start-Service -Name wuauserv
 
 Write-Host "Esvaziando Lixeira..." -ForegroundColor Cyan
