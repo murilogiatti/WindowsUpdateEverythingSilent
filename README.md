@@ -1,18 +1,27 @@
-﻿Windows Update & Maintenance Everything Silent
+# Windows Update & Maintenance Everything Silent
 
 Script robusto para manutenção profunda, limpeza de disco e atualização de softwares no Windows 10 e 11. Projetado para rodar de forma automática, movendo todas as interações para o final.
 
 🚀 Como Executar (PowerShell Admin)
 
-Para rodar o script diretamente da nuvem sem baixar arquivos manualmente, copie e cole o comando abaixo no seu PowerShell como Administrador:
+Por questões de segurança, recomendamos baixar o script e revisá-lo antes da execução.
 
-Set-ExecutionPolicy Bypass -Scope Process -Force; iwr -useb https://raw.githubusercontent.com/murilogiatti/WindowsUpdateEverythingSilent/main/CleanupAndUpdateEverything.ps1 | iex
+1. Baixe o arquivo `CleanupAndUpdateEverything.ps1`.
+2. Abra o PowerShell como Administrador.
+3. Navegue até a pasta onde o arquivo foi baixado.
+4. Execute o comando abaixo:
+
+```powershell
+Set-ExecutionPolicy Bypass -Scope Process -Force; .\CleanupAndUpdateEverything.ps1
+```
 
 🤖 Modo 100% Automático
 
-Para rodar em servidores ou via agendador de tarefas (sem nenhuma pergunta ao final):
+Para rodar em servidores ou via agendador de tarefas (sem nenhuma pergunta ao final), execute localmente:
 
-Set-ExecutionPolicy Bypass -Scope Process -Force; $script = iwr -useb https://raw.githubusercontent.com/murilogiatti/WindowsUpdateEverythingSilent/main/CleanupAndUpdateEverything.ps1; Invoke-Expression "$script -SilentMode"
+```powershell
+Set-ExecutionPolicy Bypass -Scope Process -Force; .\CleanupAndUpdateEverything.ps1 -SilentMode
+```
 
 🛠️ O que o script realiza
 
