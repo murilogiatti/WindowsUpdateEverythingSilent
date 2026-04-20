@@ -9,11 +9,8 @@ Write-Host "Iniciando processo automatizado..." -ForegroundColor Green
 function Safe-Remove {
     param([string]$Path)
     if (Test-Path $Path) {
-        $items = Get-ChildItem -Path $Path -Recurse -Force
-        if ($items.Count -gt 0) {
-            Remove-Item -Path $Path -Recurse -Force
-            Write-Host "[OK] Limpado: $Path" -ForegroundColor Cyan
-        }
+        Remove-Item -Path $Path -Recurse -Force
+        Write-Host "[OK] Limpado: $Path" -ForegroundColor Cyan
     }
 }
 
