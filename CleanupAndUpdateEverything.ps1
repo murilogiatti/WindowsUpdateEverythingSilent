@@ -22,7 +22,7 @@ Write-Host "`n=== 1. Limpeza de Arquivos Temporários ===" -ForegroundColor Mage
 Safe-Remove "$env:TEMP\*"
 Safe-Remove "C:\Windows\Temp\*"
 Safe-Remove "C:\Windows\Prefetch\*"
-Safe-Remove "C:\Users\$env:USERNAME\AppData\Local\Microsoft\Windows\Explorer\thumbcache_*.db"
+Safe-Remove "$env:LOCALAPPDATA\Microsoft\Windows\Explorer\thumbcache_*.db"
 
 Write-Host "Limpando cache do Windows Update..." -ForegroundColor Cyan
 Stop-Service -Name wuauserv -Force
