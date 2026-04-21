@@ -9,24 +9,21 @@ Write-Host "Iniciando processo automatizado..." -ForegroundColor Green
 function Safe-Remove {
     param([string]$Path)
     if (Test-Path $Path) {
-        $items = Get-ChildItem -Path $Path -Recurse -Force
-        if ($items.Count -gt 0) {
-            Remove-Item -Path $Path -Recurse -Force
-            Write-Host "[OK] Limpado: $Path" -ForegroundColor Cyan
-        }
+        Remove-Item -Path $Path -Recurse -Force
+        Write-Host "[OK] Limpado: $Path" -ForegroundColor Cyan
     }
 }
 
 # === 1. LIMPEZAS E CACHE ===
 Write-Host "`n=== 1. Limpeza de Arquivos Temporários ===" -ForegroundColor Magenta
 Safe-Remove "$env:TEMP\*"
-Safe-Remove "C:\Windows\Temp\*"
-Safe-Remove "C:\Windows\Prefetch\*"
+Safe-Remove "$env:windir\Temp\*"
+Safe-Remove "$env:windir\Prefetch\*"
 Safe-Remove "$env:LOCALAPPDATA\Microsoft\Windows\Explorer\thumbcache_*.db"
 
 Write-Host "Limpando cache do Windows Update..." -ForegroundColor Cyan
 Stop-Service -Name wuauserv -Force
-Safe-Remove "C:\Windows\SoftwareDistribution\Download\*"
+Safe-Remove "$env:windir\SoftwareDistribution\Download\*"
 Start-Service -Name wuauserv
 
 Write-Host "Esvaziando Lixeira..." -ForegroundColor Cyan
