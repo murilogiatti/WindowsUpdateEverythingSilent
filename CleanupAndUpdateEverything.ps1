@@ -40,11 +40,13 @@ sfc /scannow
 
 # === 3. REDE E CONECTIVIDADE ===
 Write-Host "`n=== 3. Reset de Rede e DNS ===" -ForegroundColor Magenta
-ipconfig /flushdns | Out-Null
-ipconfig /release | Out-Null
-ipconfig /renew | Out-Null
-netsh winsock reset | Out-Null
-netsh int ip reset | Out-Null
+& {
+    ipconfig /flushdns
+    ipconfig /release
+    ipconfig /renew
+    netsh winsock reset
+    netsh int ip reset
+} | Out-Null
 Write-Host "Rede resetada com sucesso." -ForegroundColor Green
 
 # === 4. ATUALIZAÇÕES (Winget & Windows) ===
