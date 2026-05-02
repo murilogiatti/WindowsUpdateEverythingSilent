@@ -1,7 +1,11 @@
 BeforeAll {
+    $sysDir = if ($env:windir) { "$env:windir\System32" } else { "C:\Windows\System32" }
+    $wingetPath = if ($env:LOCALAPPDATA) { "$env:LOCALAPPDATA\Microsoft\WindowsApps\winget.exe" } else { "C:\Users\Default\AppData\Local\Microsoft\WindowsApps\winget.exe" }
+
     # Stub external commands and standard cmdlets that might not exist on the Linux testing system
     $commandsToStub = @(
-        'DISM', 'sfc', 'ipconfig', 'netsh', 'winget', 'usoclient', 'chkdsk', 'Optimize-Volume',
+        "$sysDir\dism.exe", "$sysDir\sfc.exe", "$sysDir\ipconfig.exe", "$sysDir\netsh.exe",
+        $wingetPath, "$sysDir\usoclient.exe", "$sysDir\chkdsk.exe", 'Optimize-Volume',
         'Import-Module', 'Stop-Service', 'Start-Service', 'Clear-RecycleBin'
     )
     foreach ($cmd in $commandsToStub) {
@@ -37,13 +41,13 @@ Describe "CleanupAndUpdateEverything.ps1" {
         Mock Start-Process {}
 
         # Mock our stubbed commands
-        Mock DISM {}
-        Mock sfc {}
-        Mock ipconfig {}
-        Mock netsh {}
-        Mock winget {}
-        Mock usoclient {}
-        Mock chkdsk {}
+        Mock "$sysDir\dism.exe" {}
+        Mock "$sysDir\sfc.exe" {}
+        Mock "$sysDir\ipconfig.exe" {}
+        Mock "$sysDir\netsh.exe" {}
+        Mock "$wingetPath" {}
+        Mock "$sysDir\usoclient.exe" {}
+        Mock "$sysDir\chkdsk.exe" {}
         Mock Optimize-Volume {}
         Mock Get-WindowsUpdate {}
         Mock Import-Module {}
@@ -55,12 +59,12 @@ Describe "CleanupAndUpdateEverything.ps1" {
 
         # Assert
         Should -Invoke -CommandName Write-Host -Times 1 -ParameterFilter { $ForegroundColor -eq 'Green' }
-        Should -Invoke -CommandName DISM -Times 2
-        Should -Invoke -CommandName sfc -Times 1
-        Should -Invoke -CommandName ipconfig -Times 3
-        Should -Invoke -CommandName netsh -Times 2
-        Should -Invoke -CommandName winget -Times 1
-        Should -Invoke -CommandName usoclient -Times 3
+        Should -Invoke -CommandName "$sysDir\dism.exe" -Times 2
+        Should -Invoke -CommandName "$sysDir\sfc.exe" -Times 1
+        Should -Invoke -CommandName "$sysDir\ipconfig.exe" -Times 3
+        Should -Invoke -CommandName "$sysDir\netsh.exe" -Times 2
+        Should -Invoke -CommandName "$wingetPath" -Times 1
+        Should -Invoke -CommandName "$sysDir\usoclient.exe" -Times 3
         Should -Invoke -CommandName Optimize-Volume -Times 1
 
         # Verify it skips interactive prompts because of SilentMode
@@ -77,7 +81,7 @@ Describe "CleanupAndUpdateEverything.ps1" {
 
         # Assert
         Should -Invoke -CommandName Read-Host -Times 3
-        Should -Invoke -CommandName chkdsk -Times 1
+        Should -Invoke -CommandName "$sysDir\chkdsk.exe" -Times 1
         Should -Invoke -CommandName Start-Process -Times 1 -ParameterFilter { $FilePath -eq 'ms-windows-store://downloadsandupdates' }
         Should -Invoke -CommandName Restart-Computer -Times 1 -ParameterFilter { $Force -eq $true }
     }
@@ -92,7 +96,7 @@ Describe "CleanupAndUpdateEverything.ps1" {
         # Assert
         Should -Invoke -CommandName Import-Module -Times 1 -ParameterFilter { $Name -eq 'PSWindowsUpdate' }
         Should -Invoke -CommandName Get-WindowsUpdate -Times 1 -ParameterFilter { $AcceptAll -eq $true -and $Install -eq $true -and $AutoReboot -eq $false }
-        Should -Invoke -CommandName usoclient -Times 0
+        Should -Invoke -CommandName "$sysDir\usoclient.exe" -Times 0
     }
 
     It "Safe-Remove function should correctly interact with Remove-Item" {
