@@ -97,7 +97,6 @@ Describe "CleanupAndUpdateEverything.ps1" {
 
     It "Safe-Remove function should correctly interact with Remove-Item" {
         # Arrange
-        Mock Test-Path { return $true }
         Mock Get-ChildItem { return @(1, 2) } # Mock items existing
         Mock Remove-Item {}
 
@@ -105,6 +104,6 @@ Describe "CleanupAndUpdateEverything.ps1" {
         . "$PSScriptRoot/CleanupAndUpdateEverything.ps1" -SilentMode
 
         # Assert
-        Should -Invoke -CommandName Remove-Item
+        Should -Invoke -CommandName Remove-Item -ParameterFilter { $ErrorAction -eq 'SilentlyContinue' }
     }
 }
