@@ -82,6 +82,21 @@ Describe "CleanupAndUpdateEverything.ps1" {
         Should -Invoke -CommandName Restart-Computer -Times 1 -ParameterFilter { $Force -eq $true }
     }
 
+    It "Should NOT perform interactive actions when negative response is provided" {
+        # Arrange
+        Mock Test-Path { return $true } # Make it think reboot is pending
+        Mock Read-Host { return "N" }   # Make it answer 'N' to all prompts
+
+        # Act
+        . "$PSScriptRoot/CleanupAndUpdateEverything.ps1"
+
+        # Assert
+        Should -Invoke -CommandName Read-Host -Times 3
+        Should -Invoke -CommandName chkdsk -Times 0
+        Should -Invoke -CommandName Start-Process -Times 0
+        Should -Invoke -CommandName Restart-Computer -Times 0
+    }
+
     It "Should handle PSWindowsUpdate logic if module is available" {
         # Arrange
         Mock Get-Module { return $true }
