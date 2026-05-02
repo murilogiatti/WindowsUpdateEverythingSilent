@@ -31,32 +31,32 @@ Clear-RecycleBin -Force
 
 # === 2. REPARO DE SISTEMA (DISM & SFC) ===
 Write-Host "`n=== 2. Reparo de Imagem e Arquivos (DISM/SFC) ===" -ForegroundColor Magenta
-DISM /Online /Cleanup-Image /RestoreHealth
-DISM /Online /Cleanup-Image /StartComponentCleanup /ResetBase
-sfc /scannow
+& "$env:windir\System32\DISM.exe" /Online /Cleanup-Image /RestoreHealth
+& "$env:windir\System32\DISM.exe" /Online /Cleanup-Image /StartComponentCleanup /ResetBase
+& "$env:windir\System32\sfc.exe" /scannow
 
 # === 3. REDE E CONECTIVIDADE ===
 Write-Host "`n=== 3. Reset de Rede e DNS ===" -ForegroundColor Magenta
 & {
-    ipconfig /flushdns
-    ipconfig /release
-    ipconfig /renew
-    netsh winsock reset
-    netsh int ip reset
+    & "$env:windir\System32\ipconfig.exe" /flushdns
+    & "$env:windir\System32\ipconfig.exe" /release
+    & "$env:windir\System32\ipconfig.exe" /renew
+    & "$env:windir\System32\netsh.exe" winsock reset
+    & "$env:windir\System32\netsh.exe" int ip reset
 } | Out-Null
 Write-Host "Rede resetada com sucesso." -ForegroundColor Green
 
 # === 4. ATUALIZAÇÕES (Winget & Windows) ===
 Write-Host "`n=== 4. Atualizacoes Silenciosas ===" -ForegroundColor Magenta
-winget upgrade --all --silent --accept-package-agreements --accept-source-agreements
+& "$env:LOCALAPPDATA\Microsoft\WindowsApps\winget.exe" upgrade --all --silent --accept-package-agreements --accept-source-agreements
 
 if (Get-Module -ListAvailable -Name PSWindowsUpdate) {
     Import-Module PSWindowsUpdate
     Get-WindowsUpdate -AcceptAll -Install -AutoReboot:$false
 } else {
-    usoclient StartScan
-    usoclient StartDownload
-    usoclient StartInstall
+    & "$env:windir\System32\usoclient.exe" StartScan
+    & "$env:windir\System32\usoclient.exe" StartDownload
+    & "$env:windir\System32\usoclient.exe" StartInstall
 }
 
 # === 5. OTIMIZAÇÃO DE DISCO (SSD/HDD) ===
@@ -76,7 +76,7 @@ Write-Host "MANUTENÇÃO CONCLUÍDA. REVISÃO DE AÇÕES PENDENTES:" -Foreground
 Write-Host "="*60 -ForegroundColor Yellow
 
 $checkDisk = Read-Host "Deseja agendar CHKDSK para o próximo boot? (S/N)"
-if ($checkDisk -eq "S") { echo y | chkdsk C: /f /r }
+if ($checkDisk -eq "S") { Write-Output y | & "$env:windir\System32\chkdsk.exe" C: /f /r }
 
 $openStore = Read-Host "Deseja abrir a Microsoft Store? (S/N)"
 if ($openStore -eq "S") { Start-Process "ms-windows-store://downloadsandupdates" }
