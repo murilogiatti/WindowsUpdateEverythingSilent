@@ -2,6 +2,7 @@ param (
     [switch]$SilentMode
 )
 
+$ErrorActionPreference = "SilentlyContinue"
 Write-Host "Iniciando processo automatizado..." -ForegroundColor Green
 
 # --- FUNÇÕES ---
