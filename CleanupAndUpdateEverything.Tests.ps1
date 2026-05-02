@@ -31,7 +31,7 @@ Describe "CleanupAndUpdateEverything.ps1" {
         Mock Stop-Service {}
         Mock Start-Service {}
         Mock Clear-RecycleBin {}
-        Mock Get-Module { return $false } # Default to false for PSWindowsUpdate check
+        Mock Get-Module { return $false } -ParameterFilter { $Name -eq 'PSWindowsUpdate' } # Default to false for PSWindowsUpdate check
         Mock Read-Host { return "N" }
         Mock Restart-Computer {}
         Mock Start-Process {}
@@ -82,9 +82,27 @@ Describe "CleanupAndUpdateEverything.ps1" {
         Should -Invoke -CommandName Restart-Computer -Times 1 -ParameterFilter { $Force -eq $true }
     }
 
+    It "Should not execute conditional commands on negative responses" {
+        # Arrange
+        Mock Test-Path { return $true } # Make it think reboot is pending
+        Mock Read-Host { return "N" }   # Make it answer 'N' to prompts
+        Mock chkdsk {}
+        Mock Start-Process {}
+        Mock Restart-Computer {}
+
+        # Act
+        . "$PSScriptRoot/CleanupAndUpdateEverything.ps1"
+
+        # Assert
+        Should -Invoke -CommandName Read-Host -Times 3
+        Should -Invoke -CommandName chkdsk -Times 0
+        Should -Invoke -CommandName Start-Process -Times 0
+        Should -Invoke -CommandName Restart-Computer -Times 0
+    }
+
     It "Should handle PSWindowsUpdate logic if module is available" {
         # Arrange
-        Mock Get-Module { return $true }
+        Mock Get-Module { return $true } -ParameterFilter { $Name -eq 'PSWindowsUpdate' }
 
         # Act
         . "$PSScriptRoot/CleanupAndUpdateEverything.ps1" -SilentMode
