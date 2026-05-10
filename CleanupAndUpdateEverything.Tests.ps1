@@ -15,10 +15,10 @@ BeforeAll {
     }
 
     # Redefine Restart-Computer with Force parameter because Linux pwsh doesn't have it
-    Invoke-Expression "function global:Restart-Computer { param([switch]`$Force, [switch]`$Confirm, [switch]`$WhatIf) }"
+    function global:Restart-Computer { param([switch]$Force, [switch]$Confirm, [switch]$WhatIf) }
 
     if (-not (Get-Command "Get-WindowsUpdate" -ErrorAction SilentlyContinue)) {
-        Invoke-Expression "function global:Get-WindowsUpdate { param([switch]`$AcceptAll, [switch]`$Install, [bool]`$AutoReboot) }"
+        function global:Get-WindowsUpdate { param([switch]$AcceptAll, [switch]$Install, [bool]$AutoReboot) }
     }
 }
 
