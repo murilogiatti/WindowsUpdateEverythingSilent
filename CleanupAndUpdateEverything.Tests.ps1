@@ -15,10 +15,10 @@ BeforeAll {
     }
 
     # Redefine Restart-Computer with Force parameter because Linux pwsh doesn't have it
-    function global:Restart-Computer { param([switch]$Force, [switch]$Confirm, [switch]$WhatIf) }
+    Invoke-Expression "function global:Restart-Computer { param([switch]`$Force, [switch]`$Confirm, [switch]`$WhatIf) }"
 
     if (-not (Get-Command "Get-WindowsUpdate" -ErrorAction SilentlyContinue)) {
-        function global:Get-WindowsUpdate { param([switch]$AcceptAll, [switch]$Install, [bool]$AutoReboot) }
+        Invoke-Expression "function global:Get-WindowsUpdate { param([switch]`$AcceptAll, [switch]`$Install, [bool]`$AutoReboot) }"
     }
 }
 
@@ -104,18 +104,17 @@ Describe "CleanupAndUpdateEverything.ps1" {
         Should -Invoke -CommandName Restart-Computer -Times 0
     }
 
-    It "Should NOT perform interactive actions when negative response is provided" {
+    It "Should not ask for reboot if RebootPending is false" {
         # Arrange
-        Mock Test-Path { return $true } # Make it think reboot is pending
-        Mock Read-Host { return "N" }   # Make it answer 'N' to all prompts
+        Mock Test-Path { return $false }
+        Mock Read-Host { return "S" }
 
         # Act
         . "$PSScriptRoot/CleanupAndUpdateEverything.ps1"
 
         # Assert
-        Should -Invoke -CommandName Read-Host -Times 3
-        Should -Invoke -CommandName chkdsk -Times 0
-        Should -Invoke -CommandName Start-Process -Times 0
+        # Read-Host should be called for chkdsk and openStore, but NOT for reboot
+        Should -Invoke -CommandName Read-Host -Times 2
         Should -Invoke -CommandName Restart-Computer -Times 0
     }
 
