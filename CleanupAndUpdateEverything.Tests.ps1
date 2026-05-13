@@ -1,4 +1,7 @@
 BeforeAll {
+    $env:windir = 'C:\Windows'
+    $env:LOCALAPPDATA = 'C:\Users\TestUser\AppData\Local'
+
     $sysDir = if ($env:windir) { "$env:windir\System32" } else { "C:\Windows\System32" }
     $wingetPath = if ($env:LOCALAPPDATA) { "$env:LOCALAPPDATA\Microsoft\WindowsApps\winget.exe" } else { "C:\Users\Default\AppData\Local\Microsoft\WindowsApps\winget.exe" }
 
@@ -10,7 +13,7 @@ BeforeAll {
     )
     foreach ($cmd in $commandsToStub) {
         if (-not (Get-Command $cmd -ErrorAction SilentlyContinue)) {
-            New-Item -Path "Function:\$cmd" -Value { } -Force | Out-Null
+            New-Item -Path 'Function:\' -Name $cmd -Value { param([switch]$Force) } -Force | Out-Null
         }
     }
 
@@ -66,6 +69,7 @@ Describe "CleanupAndUpdateEverything.ps1" {
         Should -Invoke -CommandName "$wingetPath" -Times 1
         Should -Invoke -CommandName "$sysDir\usoclient.exe" -Times 3
         Should -Invoke -CommandName Optimize-Volume -Times 1
+        Should -Invoke -CommandName Clear-RecycleBin -Times 1 -ParameterFilter { $Force -eq $true }
 
         # Verify it skips interactive prompts because of SilentMode
         Should -Invoke -CommandName Read-Host -Times 0
@@ -90,7 +94,7 @@ Describe "CleanupAndUpdateEverything.ps1" {
         # Arrange
         Mock Test-Path { return $true } # Make it think reboot is pending
         Mock Read-Host { return "N" }   # Make it answer 'N' to prompts
-        Mock chkdsk {}
+        Mock "$sysDir\chkdsk.exe" {}
         Mock Start-Process {}
         Mock Restart-Computer {}
 
@@ -99,7 +103,7 @@ Describe "CleanupAndUpdateEverything.ps1" {
 
         # Assert
         Should -Invoke -CommandName Read-Host -Times 3
-        Should -Invoke -CommandName chkdsk -Times 0
+        Should -Invoke -CommandName "$sysDir\chkdsk.exe" -Times 0
         Should -Invoke -CommandName Start-Process -Times 0
         Should -Invoke -CommandName Restart-Computer -Times 0
     }
