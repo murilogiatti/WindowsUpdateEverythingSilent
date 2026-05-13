@@ -90,7 +90,7 @@ Describe "CleanupAndUpdateEverything.ps1" {
         # Arrange
         Mock Test-Path { return $true } # Make it think reboot is pending
         Mock Read-Host { return "N" }   # Make it answer 'N' to prompts
-        Mock chkdsk {}
+        Mock "$sysDir\chkdsk.exe" {}
         Mock Start-Process {}
         Mock Restart-Computer {}
 
@@ -99,7 +99,7 @@ Describe "CleanupAndUpdateEverything.ps1" {
 
         # Assert
         Should -Invoke -CommandName Read-Host -Times 3
-        Should -Invoke -CommandName chkdsk -Times 0
+        Should -Invoke -CommandName "$sysDir\chkdsk.exe" -Times 0
         Should -Invoke -CommandName Start-Process -Times 0
         Should -Invoke -CommandName Restart-Computer -Times 0
     }
