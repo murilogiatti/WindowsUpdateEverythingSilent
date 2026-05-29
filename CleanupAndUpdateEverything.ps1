@@ -5,6 +5,17 @@ param (
 Write-Host "Iniciando processo automatizado..." -ForegroundColor Green
 
 # --- FUNÇÕES ---
+function Confirm-Action {
+    param(
+        [string]$Prompt,
+        [scriptblock]$Action
+    )
+    $choice = Read-Host $Prompt
+    if ($choice -eq "S") {
+        & $Action
+    }
+}
+
 function Safe-Remove {
     param([string]$Path)
     Remove-Item -Path $Path -Recurse -Force -ErrorAction SilentlyContinue
@@ -74,17 +85,17 @@ Write-Host "`n" + "="*60 -ForegroundColor Yellow
 Write-Host "MANUTENÇÃO CONCLUÍDA. REVISÃO DE AÇÕES PENDENTES:" -ForegroundColor Yellow
 Write-Host "="*60 -ForegroundColor Yellow
 
-$checkDisk = Read-Host "Deseja agendar CHKDSK para o próximo boot? (S/N)"
-if ($checkDisk -eq "S") { Write-Output y | & "$env:windir\System32\chkdsk.exe" C: /f /r }
+Confirm-Action -Prompt "Deseja agendar CHKDSK para o próximo boot? (S/N)" -Action { Write-Output y | & "$env:windir\System32\chkdsk.exe" C: /f /r }
 
-$openStore = Read-Host "Deseja abrir a Microsoft Store? (S/N)"
-if ($openStore -eq "S") { Start-Process "ms-windows-store://downloadsandupdates" }
+
+Confirm-Action -Prompt "Deseja abrir a Microsoft Store? (S/N)" -Action { Start-Process "ms-windows-store://downloadsandupdates" }
+
 
 $RebootPending = Test-Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Component Based Servicing\RebootPending"
 if ($RebootPending) {
     Write-Host "`n[!] REBOOT NECESSÁRIO!" -ForegroundColor Red
-    $rebootChoice = Read-Host "Reiniciar agora? (S/N)"
-    if ($rebootChoice -eq "S") { Restart-Computer -Force }
+    Confirm-Action -Prompt "Reiniciar agora? (S/N)" -Action { Restart-Computer -Force }
+    
 }
 
 Write-Host "`nProcesso finalizado."
