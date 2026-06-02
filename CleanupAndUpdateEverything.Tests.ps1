@@ -10,7 +10,8 @@ BeforeAll {
     )
     foreach ($cmd in $commandsToStub) {
         if (-not (Get-Command $cmd -ErrorAction SilentlyContinue)) {
-            New-Item -Path "Function:\$cmd" -Value { } -Force | Out-Null
+            $value = if ($cmd -eq 'Optimize-Volume') { { param($DriveLetter, [switch]$ReTrim, [switch]$Defrag) } } else { { } }
+            New-Item -Path "Function:\" -Name $cmd -Value $value -Force | Out-Null
         }
     }
 
@@ -65,7 +66,7 @@ Describe "CleanupAndUpdateEverything.ps1" {
         Should -Invoke -CommandName "$sysDir\netsh.exe" -Times 2
         Should -Invoke -CommandName "$wingetPath" -Times 1
         Should -Invoke -CommandName "$sysDir\usoclient.exe" -Times 3
-        Should -Invoke -CommandName Optimize-Volume -Times 1
+        Should -Invoke -CommandName Optimize-Volume -Times 1 -ParameterFilter { $DriveLetter -eq 'C' -and $ReTrim -eq $true -and $Defrag -eq $true }
 
         # Verify it skips interactive prompts because of SilentMode
         Should -Invoke -CommandName Read-Host -Times 0
