@@ -1,4 +1,4 @@
-﻿BeforeAll {
+BeforeAll {
     $env:windir = 'C:\Windows'
     $env:LOCALAPPDATA = 'C:\Users\TestUser\AppData\Local'
     $sysDir = if ($env:windir) { "$env:windir\System32" } else { "C:\Windows\System32" }
@@ -8,7 +8,7 @@
     $commandsToStub = @(
         "$sysDir\dism.exe", "$sysDir\sfc.exe", "$sysDir\ipconfig.exe", "$sysDir\netsh.exe",
         $wingetPath, "$sysDir\usoclient.exe", "$sysDir\chkdsk.exe", 'Optimize-Volume',
-        'Import-Module', 'Stop-Service', 'Start-Service', 'Clear-RecycleBin'
+        'Import-Module', 'Stop-Service', 'Start-Service'
     )
     foreach ($cmd in $commandsToStub) {
         if (-not (Get-Command $cmd -ErrorAction SilentlyContinue)) {
@@ -17,11 +17,15 @@
         }
     }
 
+    if (-not (Get-Command "Clear-RecycleBin" -ErrorAction SilentlyContinue)) {
+        function global:Clear-RecycleBin { param([switch]$Force, [switch]$Confirm, [switch]$WhatIf) }
+    }
+
     # Redefine Restart-Computer with Force parameter because Linux pwsh doesn't have it
-    Invoke-Expression "function global:Restart-Computer { param([switch]`$Force, [switch]`$Confirm, [switch]`$WhatIf) }"
+    function global:Restart-Computer { param([switch]$Force, [switch]$Confirm, [switch]$WhatIf) }
 
     if (-not (Get-Command "Get-WindowsUpdate" -ErrorAction SilentlyContinue)) {
-        Invoke-Expression "function global:Get-WindowsUpdate { param([switch]`$AcceptAll, [switch]`$Install, [bool]`$AutoReboot) }"
+        function global:Get-WindowsUpdate { param([switch]$AcceptAll, [switch]$Install, [bool]$AutoReboot) }
     }
 }
 
@@ -69,6 +73,7 @@ Describe "CleanupAndUpdateEverything.ps1" {
         Should -Invoke -CommandName "$wingetPath" -Times 1
         Should -Invoke -CommandName "$sysDir\usoclient.exe" -Times 3
         Should -Invoke -CommandName Optimize-Volume -Times 1 -ParameterFilter { $DriveLetter -eq 'C' -and $ReTrim -eq $true -and $Defrag -eq $true }
+        Should -Invoke -CommandName Clear-RecycleBin -Times 1 -ParameterFilter { $Force -eq $true }
 
         # Verify it skips interactive prompts because of SilentMode
         Should -Invoke -CommandName Read-Host -Times 0
