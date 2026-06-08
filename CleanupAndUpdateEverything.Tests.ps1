@@ -135,6 +135,20 @@ Describe "CleanupAndUpdateEverything.ps1" {
         Should -Invoke -CommandName Restart-Computer -Times 0
     }
 
+    It "Should not ask for reboot if RebootPending is false" {
+        # Arrange
+        Mock Test-Path { return $false }
+        Mock Read-Host { return "S" }
+
+        # Act
+        . "$PSScriptRoot/CleanupAndUpdateEverything.ps1"
+
+        # Assert
+        # Read-Host should be called for chkdsk and openStore, but NOT for reboot
+        Should -Invoke -CommandName Read-Host -Times 2
+        Should -Invoke -CommandName Restart-Computer -Times 0
+    }
+
     It "Should handle PSWindowsUpdate logic if module is available" {
         # Arrange
         Mock Get-Module { return $true } -ParameterFilter { $Name -eq 'PSWindowsUpdate' }
