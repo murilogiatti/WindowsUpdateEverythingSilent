@@ -1,10 +1,15 @@
-param (
+﻿param (
     [switch]$SilentMode
 )
 
 Write-Host "Iniciando processo automatizado..." -ForegroundColor Green
 
 # --- FUNÇÕES ---
+function Write-SectionHeader {
+    param([string]$Title)
+    Write-Host "`n=== $Title ===" -ForegroundColor Magenta
+}
+
 function Safe-Remove {
     param([string]$Path)
     Remove-Item -Path $Path -Recurse -Force -ErrorAction SilentlyContinue
@@ -14,7 +19,7 @@ function Safe-Remove {
 }
 
 # === 1. LIMPEZAS E CACHE ===
-Write-Host "`n=== 1. Limpeza de Arquivos Temporários ===" -ForegroundColor Magenta
+Write-SectionHeader "1. Limpeza de Arquivos Temporários"
 Safe-Remove "$env:TEMP\*"
 Safe-Remove "$env:windir\Temp\*"
 Safe-Remove "$env:windir\Prefetch\*"
@@ -29,13 +34,13 @@ Write-Host "Esvaziando Lixeira..." -ForegroundColor Cyan
 Clear-RecycleBin -Force
 
 # === 2. REPARO DE SISTEMA (DISM & SFC) ===
-Write-Host "`n=== 2. Reparo de Imagem e Arquivos (DISM/SFC) ===" -ForegroundColor Magenta
+Write-SectionHeader "2. Reparo de Imagem e Arquivos (DISM/SFC)"
 & "$env:windir\System32\dism.exe" /Online /Cleanup-Image /RestoreHealth
 & "$env:windir\System32\dism.exe" /Online /Cleanup-Image /StartComponentCleanup /ResetBase
 & "$env:windir\System32\sfc.exe" /scannow
 
 # === 3. REDE E CONECTIVIDADE ===
-Write-Host "`n=== 3. Reset de Rede e DNS ===" -ForegroundColor Magenta
+Write-SectionHeader "3. Reset de Rede e DNS"
 & {
     & "$env:windir\System32\ipconfig.exe" /flushdns
     & "$env:windir\System32\ipconfig.exe" /release
@@ -46,7 +51,7 @@ Write-Host "`n=== 3. Reset de Rede e DNS ===" -ForegroundColor Magenta
 Write-Host "Rede resetada com sucesso." -ForegroundColor Green
 
 # === 4. ATUALIZAÇÕES (Winget & Windows) ===
-Write-Host "`n=== 4. Atualizacoes Silenciosas ===" -ForegroundColor Magenta
+Write-SectionHeader "4. Atualizacoes Silenciosas"
 & "$env:LOCALAPPDATA\Microsoft\WindowsApps\winget.exe" upgrade --all --silent --accept-package-agreements --accept-source-agreements
 
 if (Get-Module -ListAvailable -Name PSWindowsUpdate) {
@@ -59,7 +64,7 @@ if (Get-Module -ListAvailable -Name PSWindowsUpdate) {
 }
 
 # === 5. OTIMIZAÇÃO DE DISCO (SSD/HDD) ===
-Write-Host "`n=== 5. Otimizacao de Volume ===" -ForegroundColor Magenta
+Write-SectionHeader "5. Otimizacao de Volume"
 Optimize-Volume -DriveLetter C -ReTrim -Defrag
 
 # ============================================================

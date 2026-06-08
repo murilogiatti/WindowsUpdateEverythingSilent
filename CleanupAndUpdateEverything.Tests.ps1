@@ -9,23 +9,28 @@ BeforeAll {
     $commandsToStub = @(
         "$sysDir\dism.exe", "$sysDir\sfc.exe", "$sysDir\ipconfig.exe", "$sysDir\netsh.exe",
         $wingetPath, "$sysDir\usoclient.exe", "$sysDir\chkdsk.exe", 'Optimize-Volume',
-        'Import-Module', 'Clear-RecycleBin'
+        'Import-Module', 'Clear-RecycleBin', 'Stop-Service', 'Start-Service'
     )
     foreach ($cmd in $commandsToStub) {
         if (-not (Get-Command $cmd -ErrorAction SilentlyContinue)) {
-            New-Item -Path "Function:\$cmd" -Value { } -Force | Out-Null
+            $value = if ($cmd -eq 'Optimize-Volume') { { param($DriveLetter, [switch]$ReTrim, [switch]$Defrag) } } else { { } }
+            New-Item -Path "Function:\" -Name $cmd -Value $value -Force | Out-Null
         }
     }
 
+    if (-not (Get-Command "Clear-RecycleBin" -ErrorAction SilentlyContinue)) {
+        function global:Clear-RecycleBin { param([switch]$Force, [switch]$Confirm, [switch]$WhatIf) }
+    }
+
     # Redefine Restart-Computer with Force parameter because Linux pwsh doesn't have it
-    Invoke-Expression "function global:Restart-Computer { param([switch]`$Force, [switch]`$Confirm, [switch]`$WhatIf) }"
+    function global:Restart-Computer { param([switch]$Force, [switch]$Confirm, [switch]$WhatIf) }
 
     # Redefine Stop-Service because Linux pwsh behaves differently
     function global:Stop-Service { param([string]$Name, [switch]$Force) }
     function global:Start-Service { param([string]$Name) }
 
     if (-not (Get-Command "Get-WindowsUpdate" -ErrorAction SilentlyContinue)) {
-        Invoke-Expression "function global:Get-WindowsUpdate { param([switch]`$AcceptAll, [switch]`$Install, [bool]`$AutoReboot) }"
+        function global:Get-WindowsUpdate { param([switch]$AcceptAll, [switch]$Install, [bool]$AutoReboot) }
     }
 }
 
@@ -72,7 +77,8 @@ Describe "CleanupAndUpdateEverything.ps1" {
         Should -Invoke -CommandName "$sysDir\netsh.exe" -Times 2
         Should -Invoke -CommandName "$wingetPath" -Times 1
         Should -Invoke -CommandName "$sysDir\usoclient.exe" -Times 3
-        Should -Invoke -CommandName Optimize-Volume -Times 1
+        Should -Invoke -CommandName Optimize-Volume -Times 1 -ParameterFilter { $DriveLetter -eq 'C' -and $ReTrim -eq $true -and $Defrag -eq $true }
+        Should -Invoke -CommandName Clear-RecycleBin -Times 1 -ParameterFilter { $Force -eq $true }
         Should -Invoke -CommandName Stop-Service -Times 1 -ParameterFilter { $Name -eq 'wuauserv' -and $Force.IsPresent }
         Should -Invoke -CommandName Start-Service -Times 1 -ParameterFilter { $Name -eq 'wuauserv' }
 
@@ -110,6 +116,34 @@ Describe "CleanupAndUpdateEverything.ps1" {
         Should -Invoke -CommandName Read-Host -Times 3
         Should -Invoke -CommandName "$sysDir\chkdsk.exe" -Times 0
         Should -Invoke -CommandName Start-Process -Times 0
+        Should -Invoke -CommandName Restart-Computer -Times 0
+    }
+
+    It "Should not ask for reboot if RebootPending is false" {
+        # Arrange
+        Mock Test-Path { return $false }
+        Mock Read-Host { return "S" }
+
+        # Act
+        . "$PSScriptRoot/CleanupAndUpdateEverything.ps1"
+
+        # Assert
+        # Read-Host should be called for chkdsk and openStore, but NOT for reboot
+        Should -Invoke -CommandName Read-Host -Times 2
+        Should -Invoke -CommandName Restart-Computer -Times 0
+    }
+
+    It "Should not ask for reboot if RebootPending is false" {
+        # Arrange
+        Mock Test-Path { return $false }
+        Mock Read-Host { return "S" }
+
+        # Act
+        . "$PSScriptRoot/CleanupAndUpdateEverything.ps1"
+
+        # Assert
+        # Read-Host should be called for chkdsk and openStore, but NOT for reboot
+        Should -Invoke -CommandName Read-Host -Times 2
         Should -Invoke -CommandName Restart-Computer -Times 0
     }
 
